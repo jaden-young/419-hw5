@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.util.StringTokenizer;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -16,15 +18,21 @@ public class WordCount {
   public static class TokenizerMapper
        extends Mapper<Object, Text, Text, IntWritable>{
 
-    private final static IntWritable one = new IntWritable(1);
-    private Text word = new Text();
-
     public void map(Object key, Text value, Context context
                     ) throws IOException, InterruptedException {
       StringTokenizer itr = new StringTokenizer(value.toString());
+      Map<String,Integer> m = new HashMap<String,Integer>();
+
       while (itr.hasMoreTokens()) {
-        word.set(itr.nextToken());
-        context.write(word, one);
+          String s = itr.nextToken();
+          Integer i = m.get(s);
+          m.set(s, (i == null) ? 1 : ++i)
+      }
+
+      for (Map.Entry<String,Integer> entry : m.entrySet()) {
+          String s = entry.getKey();
+          Integer i = entry.getValue();
+          context.write(new Text(s), new IntWritable(i));
       }
     }
   }
